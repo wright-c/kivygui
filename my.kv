@@ -1,0 +1,36 @@
+<MyGridLayout>
+    
+    name: name
+    pizza: pizza
+    colour: colour
+
+    GridLayout:
+        cols: 1
+        size: root.width, root.height
+
+        GridLayout:
+            cols: 2
+
+            Label:
+                text: "Name"
+            TextInput:
+                id: name
+                multiline: False
+
+            Label:
+                text: "Favourite Pizza"
+            TextInput:
+                id: pizza
+                multiline: False
+                
+            Label:
+                text: "Favourite Colour"
+            TextInput:
+                id: colour
+                multiline: False
+
+        Button:
+            text: "Submit"
+            font_size: 32
+            on_press: root.press()
+            
