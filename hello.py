@@ -6,6 +6,7 @@ from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.uix.image import Image
 from kivy.uix.floatlayout import FloatLayout
+from decimal import Decimal
 
 Window.size = (500, 700)
 
@@ -80,10 +81,6 @@ Builder.load_string('''
                 text: "x"
                 grid: (3, 1)
                 on_press: root.operation_press("multiplication")
-                on_release: 
-                    # keep the color of the button the same as it was while it was pressed
-                    self.background_normal = self.background_down
-
 
 
             # Row 3
@@ -159,7 +156,7 @@ Builder.load_string('''
             Button:
                 text: "="
                 grid: (3, 4)
-                on_press: root.equals()
+                on_press: root.equals_press()
 
 ''')
 
@@ -175,12 +172,46 @@ class MyLayout(Widget):
     active_operation = ""
     first_number = 0
     second_number = 0
+    total = 0
+    new_input = False
 
     def clear(self):
         self.ids.calc_input.text = "0"
 
+    # define the equals function
+    def equals(self):
+        if self.active_operation == "addition":
+            total = self.first_number + self.second_number
+            self.ids.calc_input.text = str(total)
+            self.active_operation = ""
+            self.addition = False
+            self.ids.addition_button.background_normal = "atlas://data/images/defaulttheme/button"
+
+        elif self.active_operation == "subtraction":
+            total = self.first_number - self.second_number
+            self.ids.calc_input.text = str(total)
+            self.active_operation = ""
+            self.subtraction = False
+            self.ids.subtraction_button.background_normal = "atlas://data/images/defaulttheme/button"
+
+        elif self.active_operation == "multiplication":
+            total = self.first_number * self.second_number
+            self.ids.calc_input.text = str(total)
+            self.active_operation = ""
+            self.multiplication = False
+            self.ids.multiplication_button.background_normal = "atlas://data/images/defaulttheme/button"
+
+        elif self.active_operation == "division":
+            total = self.first_number / self.second_number
+            self.ids.calc_input.text = str(total)
+            self.active_operation = ""
+            self.division = False
+            self.ids.division_button.background_normal = "atlas://data/images/defaulttheme/button"
+
     # Number button press
     def number_press(self, number):
+
+        # if the first number is 0 then clear the text
         if self.ids.calc_input.text == "0":
             self.ids.calc_input.text = ""
 
@@ -194,58 +225,91 @@ class MyLayout(Widget):
         if len(self.ids.calc_input.text) > 15:
             self.ids.calc_input.text = self.ids.calc_input.text[:-1]
 
-    # Add button press
+        # set the new input to true
+        self.new_input = True
+
+    # Operation button press
     def operation_press(self, operation):
-        # if the text is 0 then set it to nothing
-        if self.ids.calc_input.text == "0":
-            self.ids.calc_input.text = ""
+
+        # if the first number is not 0 then set the second number to the current number in the text box and run the equals function
+        if self.first_number != 0 and self.new_input:
+            self.second_number = Decimal(self.ids.calc_input.text)
+            self.equals()
+
+        # set the first number
+        self.first_number = Decimal(self.ids.calc_input.text)
 
         # if the first number is 0 then skip the rest of the function
         if self.first_number == 0:
             return
+        
+        if self.active_operation != "":
+            self.ids.addition_button.background_normal = "atlas://data/images/defaulttheme/button"
+            self.ids.subtraction_button.background_normal = "atlas://data/images/defaulttheme/button"
+            self.ids.multiplication_button.background_normal = "atlas://data/images/defaulttheme/button"
+            self.ids.division_button.background_normal = "atlas://data/images/defaulttheme/button"
 
+        # set the new input to false
+        self.new_input = False
+        
         # check operation and set the active operation
         if operation == "addition":
+        
+            # set the active operation to addition
             self.active_operation = "addition"
             self.addition = True
             self.subtraction = False
             self.multiplication = False
             self.division = False
-            # highlight the button
-            self.ids.addition_button.background_color = 0, 0, 0, 1
-            self.ids.addition_button.text_color = 1, 1, 1, 1
+
+            # change the button color to show that it is active
+            self.ids.addition_button.background_normal = "atlas://data/images/defaulttheme/button_pressed"
+            
 
         elif operation == "subtraction":
+            
+            # set the active operation to subtraction
             self.active_operation = "subtraction"
             self.addition = False
             self.subtraction = True
             self.multiplication = False
             self.division = False
-            # highlight the button
-            self.ids.subtraction_button.background_color = 0, 0, 0, 1
-            self.ids.subtraction_button.text_color = 1, 1, 1, 1
+
+            # change the button color to show that it is active
+            self.ids.subtraction_button.background_normal = "atlas://data/images/defaulttheme/button_pressed"
+            
 
         elif operation == "multiplication":
+
+            # set the active operation to multiplication
             self.active_operation = "multiplication"
             self.addition = False
             self.subtraction = False
             self.multiplication = True
             self.division = False
-            # highlight the button
+
+            # change the button color to show that it is active
+            self.ids.multiplication_button.background_normal = "atlas://data/images/defaulttheme/button_pressed"
+
 
         elif operation == "division":
+
+            # set the active operation to division
             self.active_operation = "division"
             self.addition = False
             self.subtraction = False
             self.multiplication = False
             self.division = True
-            # highlight the button
-            self.ids.division_button.background_color = 0, 0, 0, 1
-            self.ids.division_button.text_color = 1, 1, 1, 1
 
-    # Equals button press
-    # def equals(self):
+            # change the button color to show that it is active
+            self.ids.division_button.background_normal = "atlas://data/images/defaulttheme/button_pressed"
 
+    def equals_press(self):
+        # set the second number
+        self.second_number = Decimal(self.ids.calc_input.text)
+
+        self.equals()
+    
 
 class MyApp(App):
     def build(self):
