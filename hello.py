@@ -33,6 +33,8 @@ Builder.load_string('''
             # make the size only the height of the text
             size_hint_y: None
             height: 150
+            # make it so the text can't be edited
+            readonly: True
             
 
         GridLayout:
