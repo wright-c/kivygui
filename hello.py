@@ -9,7 +9,7 @@ from kivy.uix.floatlayout import FloatLayout
 from decimal import Decimal
 from kivy.logger import Logger
 from kivy.clock import Clock
-#import keyboard
+# import keyboard
 import keyboard as kb
 
 
@@ -44,13 +44,16 @@ Builder.load_string('''
             Button:
                 text: "%"
                 grid: (0, 0)
+                on_press: root.percentage_press()
             
             Button:
+                id: clear_entry_button
                 text: "CE"
                 grid: (1, 0)
+                on_press: root.clear_entry()
 
             Button:
-                id: clear
+                id: clear_button
                 text: "C"
                 grid: (2, 0)
                 on_press: root.clear()
@@ -153,6 +156,7 @@ Builder.load_string('''
                 text: "+/-"
                 grid: (0, 4)
                 background_color: 157/255, 157/255, 157/255, 1
+                on_press: root.positive_negative_press()
 
                 
             Button:
@@ -168,6 +172,7 @@ Builder.load_string('''
                 text_color: 0, 0, 0, 1
                 grid: (2, 4)
                 background_color: 157/255, 157/255, 157/255, 1
+                on_press: root.decimal_press()
 
             Button:
                 id: equals_button
@@ -176,8 +181,6 @@ Builder.load_string('''
                 on_press: root.equals_press()
 
 ''')
-
-
 
 
 class MyLayout(Widget):
@@ -223,6 +226,15 @@ class MyLayout(Widget):
         self.ids.subtraction_button.background_normal = "atlas://data/images/defaulttheme/button"
         self.ids.multiplication_button.background_normal = "atlas://data/images/defaulttheme/button"
         self.ids.division_button.background_normal = "atlas://data/images/defaulttheme/button"
+
+    # define the CE function
+    def clear_entry(self):
+
+        # set the input text to 0
+        self.ids.calc_input.text = "0"
+
+        # set the new input to true
+        self.new_input = True
 
     # define the equals function
     def equals(self):
@@ -278,12 +290,32 @@ class MyLayout(Widget):
             self.first_number = 0
             self.second_number = 0
             self.total = 0
-        
 
         self.ids.calc_input.text += str(number)
         # limit the number of characters to fit the screen
         if len(self.ids.calc_input.text) > 15:
             self.ids.calc_input.text = self.ids.calc_input.text[:-1]
+
+        # set the new input to true
+        self.new_input = True
+
+    # Decimal button press
+    def decimal_press(self):
+
+        # check if the new input is false, if it is then clear the text
+        if not self.new_input:
+            self.ids.calc_input.text = ""
+
+        # if the user finishes an operation and presses a number then clear the text, and set variables to 0 in order to start a new operation
+        if self.total != 0 and self.new_input and self.new_equation:
+            self.ids.calc_input.text = ""
+            self.first_number = 0
+            self.second_number = 0
+            self.total = 0
+
+        # if the text box does not contain a decimal then add one
+        if "." not in self.ids.calc_input.text:
+            self.ids.calc_input.text += "."
 
         # set the new input to true
         self.new_input = True
@@ -305,7 +337,7 @@ class MyLayout(Widget):
         # if the first number is 0 then skip the rest of the function
         if self.first_number == 0:
             return
-        
+
         if self.active_operation != "":
             self.ids.addition_button.background_normal = "atlas://data/images/defaulttheme/button"
             self.ids.subtraction_button.background_normal = "atlas://data/images/defaulttheme/button"
@@ -314,10 +346,10 @@ class MyLayout(Widget):
 
         # set the new input to false
         self.new_input = False
-        
+
         # check operation and set the active operation
         if operation == "addition":
-        
+
             # set the active operation to addition
             self.active_operation = "addition"
             self.addition = True
@@ -327,10 +359,9 @@ class MyLayout(Widget):
 
             # change the button color to show that it is active
             self.ids.addition_button.background_normal = "atlas://data/images/defaulttheme/button_pressed"
-            
 
         elif operation == "subtraction":
-            
+
             # set the active operation to subtraction
             self.active_operation = "subtraction"
             self.addition = False
@@ -340,7 +371,6 @@ class MyLayout(Widget):
 
             # change the button color to show that it is active
             self.ids.subtraction_button.background_normal = "atlas://data/images/defaulttheme/button_pressed"
-            
 
         elif operation == "multiplication":
 
@@ -354,7 +384,6 @@ class MyLayout(Widget):
             # change the button color to show that it is active
             self.ids.multiplication_button.background_normal = "atlas://data/images/defaulttheme/button_pressed"
 
-
         elif operation == "division":
 
             # set the active operation to division
@@ -367,25 +396,44 @@ class MyLayout(Widget):
             # change the button color to show that it is active
             self.ids.division_button.background_normal = "atlas://data/images/defaulttheme/button_pressed"
 
+    # positive/negative button press
+    def positive_negative_press(self):
+
+        # if the text box is not empty then change the number to positive or negative
+        if self.ids.calc_input.text != "":
+            if self.ids.calc_input.text[0] == "-":
+                self.ids.calc_input.text = self.ids.calc_input.text[1:]
+            else:
+                self.ids.calc_input.text = "-" + self.ids.calc_input.text
+
     def equals_press(self):
         # set the second number
         self.second_number = Decimal(self.ids.calc_input.text)
 
         self.equals()
+        self.new_equation = True
+        self.new_input = True
+
+    # define the percentage function
+    def percentage_press(self):
+        # if the text box is not empty then calculate the percentage
+        if self.ids.calc_input.text != "":
+            self.ids.calc_input.text = str(
+                Decimal(self.ids.calc_input.text) / 100)
 
 
 class MyApp(App):
     def build(self):
         Window.clearcolor = (200/255, 200/255, 200/255, 1)
         return MyLayout()
-    
+
     def on_start(self):
         Window.bind(on_keyboard=self.on_keyboard)
 
     # define a fucntion to check if a key is pressed, if so trigger the corresponding button press
     def on_keyboard(self, window, key, scancode, codepoint, modifier):
 
-        print(f"{key} was pressed")     
+        print(f"{key} was pressed")
 
         # if key is an int
         if type(key) == int:
@@ -459,7 +507,6 @@ class MyApp(App):
                 # button = App.get_running_app().root.ids.clear_button
                 # button.trigger_action()
 
-        
         return True
 
 
